@@ -22,6 +22,7 @@ RUN echo "Building OctoPrint..."
 # RUN pip install --upgrade pip
 # Workaround for a pip version mismatch
 # RUN apt-get update && apt-get remove -f python-pip && apt-get install -y python-pip && apt-get remove -f python-pip easy_install -U pip
+RUN pip install ipdb
 RUN pip install setuptools
 RUN pip install -r requirements.txt
 RUN python setup.py install
