@@ -1,17 +1,17 @@
-FROM resin/rpi-raspbian:latest
+FROM alpine:latest
 MAINTAINER kenneth.jiang+dockerhub@gmail.com
 
 ARG version
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python-pip \
+RUN apk update && apk add --update \
+    linux-headers \
+    python \
     python-dev \
-    build-essential \
-    git \
-    avrdude \
+    py-pip \
+    build-base \
     curl \
-    wget \
     unzip
+
 
 RUN echo "Cloning OctoPrint repository..."
 

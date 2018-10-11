@@ -11,15 +11,20 @@ from __future__ import absolute_import
 
 import octoprint.plugin
 
-class PrintqueuePlugin(octoprint.plugin.SettingsPlugin,
+class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
                        octoprint.plugin.AssetPlugin,
                        octoprint.plugin.TemplatePlugin):
+
+	def get_template_configs(self):
+	    return [
+	        dict(type="settings", custom_bindings=False)
+	    ]
 
 	##~~ SettingsPlugin mixin
 
 	def get_settings_defaults(self):
 		return dict(
-			# put your plugin's default settings here
+                        endpoint_prefix="https://api.gofab.com/"
 		)
 
 	##~~ AssetPlugin mixin
@@ -41,7 +46,7 @@ class PrintqueuePlugin(octoprint.plugin.SettingsPlugin,
 		# for details.
 		return dict(
 			PrintQueue=dict(
-				displayName="Printqueue Plugin",
+				displayName="PrintQueue Plugin",
 				displayVersion=self._plugin_version,
 
 				# version check: github repository
@@ -59,11 +64,11 @@ class PrintqueuePlugin(octoprint.plugin.SettingsPlugin,
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
-__plugin_name__ = "Printqueue Plugin"
+__plugin_name__ = "PrintQueue Plugin"
 
 def __plugin_load__():
 	global __plugin_implementation__
-	__plugin_implementation__ = PrintqueuePlugin()
+	__plugin_implementation__ = PrintQueuePlugin()
 
 	global __plugin_hooks__
 	__plugin_hooks__ = {

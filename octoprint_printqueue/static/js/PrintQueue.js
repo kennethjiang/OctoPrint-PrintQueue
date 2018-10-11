@@ -5,7 +5,7 @@
  * License: AGPLv3
  */
 $(function() {
-    function PrintqueueViewModel(parameters) {
+    function PrintQueueViewModel(parameters) {
         var self = this;
 
         // assign the injected parameters, e.g.:
@@ -20,7 +20,7 @@ $(function() {
      * and a full list of the available options.
      */
     OCTOPRINT_VIEWMODELS.push({
-        construct: PrintqueueViewModel,
+        construct: PrintQueueViewModel,
         // ViewModels your plugin depends on, e.g. loginStateViewModel, settingsViewModel, ...
         dependencies: [ /* "loginStateViewModel", "settingsViewModel" */ ],
         // Elements to bind to, e.g. #settings_plugin_PrintQueue, #tab_plugin_PrintQueue, ...
