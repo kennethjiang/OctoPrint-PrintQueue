@@ -1,0 +1,10 @@
+*.pyc
+*.swp
+*.iml
+build
+dist
+*.egg*
+.DS_Store
+*.zip
+/data
+/node_modules

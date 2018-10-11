@@ -1,0 +1,34 @@
+accessControl:
+  enabled: false
+api:
+  key: C5CE0E6E0876420BA8E159FAFF723A5F
+plugins:
+  announcements:
+    _config_version: 1
+    channels:
+      _blog:
+        read_until: 1538240400
+      _important:
+        read_until: 1521111600
+      _octopi:
+        read_until: 1527588900
+      _plugins:
+        read_until: 1538179200
+      _releases:
+        read_until: 1532527200
+  discovery:
+    upnpUuid: effb7af1-c7b8-437f-9014-24dc8495ab4d
+  softwareupdate:
+    _config_version: 6
+printerProfiles:
+  default: _default
+server:
+  firstRun: false
+  onlineCheck:
+    enabled: true
+  pluginBlacklist:
+    enabled: true
+  secretKey: 65nHrtPm1K3PnUKVz2wP4yp8JB0tV9uJ
+  seenWizards:
+    corewizard: 3
+    cura: null
