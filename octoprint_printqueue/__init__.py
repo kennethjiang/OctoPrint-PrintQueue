@@ -20,9 +20,10 @@ _logger = logging.getLogger(__name__)
 GOFAB_FOLDER = "_gofab_"
 
 class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
-                       octoprint.plugin.StartupPlugin,
-                       octoprint.plugin.AssetPlugin,
-                       octoprint.plugin.TemplatePlugin):
+			octoprint.plugin.StartupPlugin,
+			octoprint.plugin.EventHandlerPlugin,
+			octoprint.plugin.AssetPlugin,
+			octoprint.plugin.TemplatePlugin):
 
 	def get_template_configs(self):
 		return [
@@ -70,12 +71,17 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 		)
 
 
-	## Startup Plugin
+	##~~ Eventhandler mixin
+
+	def on_event(self, event, payload):
+		self.send_printer_status()
+
+	##~~Startup Plugin
 	def on_after_startup(self):
 		self.ensure_storage()
 		while True:
 			self.send_printer_status()
-			time.sleep(5)
+			time.sleep(30)
 
 
 	## Private methods
@@ -92,16 +98,15 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 			return
 
 		printer_id, printer_token = combined_token.split("|", 1)
-		if not printer_id or not printer_token:
-			_logger.warning("Auth token is not in valid format.")
-			return
 
 		headers = {"X-Printer-Id": printer_id, "X-Printer-Token": printer_token}
 		endpoint = self._settings.get(["endpoint_prefix"]) + "api/printer_statuses.json"
-		requests.get(
+		octoprint_data = self._printer.get_current_data()
+		_logger.warning(octoprint_data)
+		requests.post(
 			endpoint,
 			headers=headers,
-			json={'octoprint_data': self._printer.get_current_data()}
+			json={'octoprint_data': octoprint_data}
 			).raise_for_status()
 
 		#self._printer.select_file('Part_Studio_1_-_Part_2.gcode', False)
