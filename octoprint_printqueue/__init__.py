@@ -73,8 +73,8 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 
 	##~~ Eventhandler mixin
 
-	def on_event(self, event, payload):
-		self.send_printer_status()
+#	def on_event(self, event, payload):
+#		self.send_printer_status()
 
 	##~~Startup Plugin
 	def on_after_startup(self):
@@ -88,7 +88,7 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 
 	def ensure_storage(self):
 		self._file_manager.add_folder('local', GOFAB_FOLDER, ignore_existing=True)
-		folder_path = self._file_manager.path_on_disk('local', GOFAB_FOLDER)
+		self._g_code_folder = self._file_manager.path_on_disk('local', GOFAB_FOLDER)
 
 	@backoff.on_exception(backoff.expo, Exception, max_value=240)
 	def send_printer_status(self):
@@ -103,14 +103,23 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 		endpoint = self._settings.get(["endpoint_prefix"]) + "api/printer_statuses.json"
 		octoprint_data = self._printer.get_current_data()
 		_logger.warning(octoprint_data)
-		requests.post(
+		resp = requests.post(
 			endpoint,
 			headers=headers,
 			json={'octoprint_data': octoprint_data}
-			).raise_for_status()
+			)
+		resp.raise_for_status()
+		for command in resp.json():
+			if command['command'] == 'print':
+				self.download_and_print(command['file_url'], command['file_name'])
 
-		#self._printer.select_file('Part_Studio_1_-_Part_2.gcode', False)
-
+	def download_and_print(self, file_url, file_name):
+		import os
+		r = requests.get(file_url, allow_redirects=True)
+		r.raise_for_status()
+		target_path = os.path.join(self._g_code_folder, file_name)
+		open(target_path, 'wb').write(r.content)
+		self._printer.select_file(target_path, False, printAfterSelect=True)
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
