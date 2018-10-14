@@ -73,15 +73,21 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 
 	##~~ Eventhandler mixin
 
-#	def on_event(self, event, payload):
-#		self.send_printer_status()
+	def on_event(self, event, payload):
+		if event.startswith("Print"):
+			self.send_printer_status({
+				"octoprint_event": {
+					"event_type": event,
+					"data": payload
+					}
+				})
 
 	##~~Startup Plugin
 	def on_after_startup(self):
 		self.ensure_storage()
 		while True:
-			self.send_printer_status()
-			time.sleep(30)
+			self.send_printer_status({'octoprint_data': self._printer.get_current_data()})
+			time.sleep(120)
 
 
 	## Private methods
@@ -91,7 +97,7 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 		self._g_code_folder = self._file_manager.path_on_disk('local', GOFAB_FOLDER)
 
 	@backoff.on_exception(backoff.expo, Exception, max_value=240)
-	def send_printer_status(self):
+	def send_printer_status(self, json_data):
 		combined_token = self._settings.get(["auth_token"])
 		if not combined_token:
 			_logger.warning("Auth token is not configured.")
@@ -101,17 +107,17 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 
 		headers = {"X-Printer-Id": printer_id, "X-Printer-Token": printer_token}
 		endpoint = self._settings.get(["endpoint_prefix"]) + "api/printer_statuses.json"
-		octoprint_data = self._printer.get_current_data()
-		_logger.warning(octoprint_data)
+		import json
+		_logger.warning(json.dumps(json_data))
 		resp = requests.post(
 			endpoint,
 			headers=headers,
-			json={'octoprint_data': octoprint_data}
+			json=json_data
 			)
 		resp.raise_for_status()
 		for command in resp.json():
 			if command['command'] == 'print':
-				self.download_and_print(command['file_url'], command['file_name'])
+				self.download_and_print(command['data']['file_url'], command['data']['file_name'])
 
 	def download_and_print(self, file_url, file_name):
 		import os

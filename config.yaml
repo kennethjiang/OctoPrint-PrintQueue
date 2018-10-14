@@ -19,7 +19,8 @@ plugins:
   discovery:
     upnpUuid: effb7af1-c7b8-437f-9014-24dc8495ab4d
   printqueue:
-    endpoint_prefix: http://docker.for.mac.localhost:3000/
+    endpoint_prefix: http://docker.for.mac.localhost:3001/
+    auth_token: 1|qXVtjjymwzb8er1fBxm_
   softwareupdate:
     _config_version: 6
     check_providers:
@@ -107,10 +108,10 @@ devel:
 
     # The maximum movement speeds of the simulated printer's axes, in mm/s
     movementSpeed:
-      x: 6000
-      y: 6000
-      z: 200
-      e: 300
+      x: 60
+      y: 60
+      z: 2
+      e: 3
 
     # Whether the simulated printer should also simulate a heated bed or not
     hasBed: true
