@@ -1,6 +1,6 @@
 version: '2'
 services:
-  printer_1:
+  printer_1_stg:
     build:
         context: .
         args:
@@ -8,13 +8,13 @@ services:
     stdin_open: true
     tty: true
     ports:
-    - "5001:5000"
+    - "5101:5000"
     volumes:
     - ${PWD}:/app
     command: >
-      sh -c "cp /app/opconfigs/config.yaml.1 /data/config.yaml
+      sh -c "cp /app/opconfigs/config.yaml.1.stg /data/config.yaml
       && octoprint --iknowwhatimdoing --basedir /data --debug"
-  printer_2:
+  printer_2_stg:
     build:
         context: .
         args:
@@ -22,9 +22,9 @@ services:
     stdin_open: true
     tty: true
     ports:
-    - "5002:5000"
+    - "5102:5000"
     volumes:
     - ${PWD}:/app
     command: >
-      sh -c "cp /app/opconfigs/config.yaml.2 /data/config.yaml
+      sh -c "cp /app/opconfigs/config.yaml.2.stg /data/config.yaml
       && octoprint --iknowwhatimdoing --basedir /data --debug"

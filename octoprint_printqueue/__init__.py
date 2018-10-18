@@ -87,7 +87,7 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 		self.ensure_storage()
 		while True:
 			self.send_printer_status({'octoprint_data': self._printer.get_current_data()})
-			time.sleep(120)
+			time.sleep(30)
 
 
 	## Private methods
