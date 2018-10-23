@@ -19,8 +19,8 @@ plugins:
   discovery:
     upnpUuid: effb7af1-c7b8-437f-9014-24dc8495ab4d
   printqueue:
-    endpoint_prefix: http://app.stg.gofab.xyz/
-    auth_token: 6;EDPmY3Lzxd-RsR2sxNpx
+    endpoint_prefix: https://app.gofab.xyz/
+    auth_token: 1;qXVtjjymwzb8er1fBxm_
   softwareupdate:
     _config_version: 6
     check_providers:
