@@ -17,7 +17,7 @@ import octoprint.plugin
 
 _logger = logging.getLogger(__name__)
 
-GOFAB_FOLDER = "_gofab_"
+PRINTQ_FOLDER = "_printq_"
 
 class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 			octoprint.plugin.StartupPlugin,
@@ -79,22 +79,28 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 				"octoprint_event": {
 					"event_type": event,
 					"data": payload
-					}
+					},
+				"octoprint_data": self.octoprint_data()
 				})
 
 	##~~Startup Plugin
 	def on_after_startup(self):
 		self.ensure_storage()
 		while True:
-			self.send_printer_status({'octoprint_data': self._printer.get_current_data()})
+			self.send_printer_status({"octoprint_data": self.octoprint_data()})
 			time.sleep(30)
 
 
 	## Private methods
 
+	def octoprint_data(self):
+		data = self._printer.get_current_data()
+		data['temperatures'] = self._printer.get_current_temperatures()
+		return data
+
 	def ensure_storage(self):
-		self._file_manager.add_folder('local', GOFAB_FOLDER, ignore_existing=True)
-		self._g_code_folder = self._file_manager.path_on_disk('local', GOFAB_FOLDER)
+		self._file_manager.add_folder("local", PRINTQ_FOLDER, ignore_existing=True)
+		self._g_code_folder = self._file_manager.path_on_disk("local", PRINTQ_FOLDER)
 
 	@backoff.on_exception(backoff.expo, Exception, max_value=240)
 	def send_printer_status(self, json_data):
@@ -103,12 +109,12 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 			_logger.warning("Auth token is not configured.")
 			return
 
-		printer_id, printer_token = combined_token.split("|", 1)
+		printer_id, printer_token = combined_token.split(";", 1)
 
 		headers = {"X-Printer-Id": printer_id, "X-Printer-Token": printer_token}
 		endpoint = self._settings.get(["endpoint_prefix"]) + "api/printer_statuses.json"
 		import json
-		_logger.warning(json.dumps(json_data))
+		_logger.debug(json.dumps(json_data))
 		resp = requests.post(
 			endpoint,
 			headers=headers,
@@ -116,15 +122,15 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 			)
 		resp.raise_for_status()
 		for command in resp.json():
-			if command['command'] == 'print':
-				self.download_and_print(command['data']['file_url'], command['data']['file_name'])
+			if command["command"] == "print":
+				self.download_and_print(command["data"]["file_url"], command["data"]["file_name"])
 
 	def download_and_print(self, file_url, file_name):
 		import os
 		r = requests.get(file_url, allow_redirects=True)
 		r.raise_for_status()
 		target_path = os.path.join(self._g_code_folder, file_name)
-		open(target_path, 'wb').write(r.content)
+		open(target_path, "wb").write(r.content)
 		self._printer.select_file(target_path, False, printAfterSelect=True)
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
