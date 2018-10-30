@@ -124,6 +124,12 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 		for command in resp.json():
 			if command["command"] == "print":
 				self.download_and_print(command["data"]["file_url"], command["data"]["file_name"])
+			if command["command"] == "cancel":
+				self._printer.cancel_print()
+			if command["command"] == "pause":
+				self._printer.pause_print()
+			if command["command"] == "resume":
+				self._printer.resume_print()
 
 	def download_and_print(self, file_url, file_name):
 		import os
