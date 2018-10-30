@@ -86,9 +86,10 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 	##~~Startup Plugin
 	def on_after_startup(self):
 		self.ensure_storage()
-		while True:
-			self.send_printer_status({"octoprint_data": self.octoprint_data()})
-			time.sleep(30)
+
+		main_thread = threading.Thread(target=self.poll_loop)
+		main_thread.daemon = True
+		main_thread.start()
 
 
 	## Private methods
@@ -103,6 +104,11 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 		self._g_code_folder = self._file_manager.path_on_disk("local", PRINTQ_FOLDER)
 
 	@backoff.on_exception(backoff.expo, Exception, max_value=240)
+	def poll_loop(self):
+		while True:
+			self.send_printer_status({"octoprint_data": self.octoprint_data()})
+			time.sleep(30)
+
 	def send_printer_status(self, json_data):
 		combined_token = self._settings.get(["auth_token"])
 		if not combined_token:
