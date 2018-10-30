@@ -34,7 +34,7 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_settings_defaults(self):
 		return dict(
-                        endpoint_prefix="https://api.gofab.com/"
+                        endpoint_prefix="https://app.gofab.com/"
 		)
 
 	##~~ AssetPlugin mixin
