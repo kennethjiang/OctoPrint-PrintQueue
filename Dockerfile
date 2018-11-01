@@ -27,11 +27,11 @@ RUN pip install setuptools
 RUN pip install -r requirements.txt
 RUN python setup.py install
 
-VOLUME /data
-
 ADD . /app
 WORKDIR /app
 RUN python setup.py develop
+
+RUN mkdir /data && cp /app/opconfigs/logging.yaml /data/
 
 RUN echo "Starting OctoPrint..."
 
