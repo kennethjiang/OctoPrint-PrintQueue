@@ -1,0 +1,7 @@
+loggers:
+  SERIAL:
+    level: DEBUG
+  octoprint:
+    level: DEBUG
+  printqueue:
+    level: DEBUG
