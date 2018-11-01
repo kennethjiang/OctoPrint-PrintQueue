@@ -1,6 +1,5 @@
 # coding=utf-8
 from __future__ import absolute_import
-import re
 import logging
 import threading
 import time
@@ -140,8 +139,6 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 				self._printer.resume_print()
 
 	def download_and_print(self, file_url, file_name):
-		file_name = re.sub(r'[^\w\.]', '_', file_name)
-
 		import os
 		r = requests.get(file_url, allow_redirects=True)
 		r.raise_for_status()
