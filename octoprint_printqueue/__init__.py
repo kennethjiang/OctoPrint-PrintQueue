@@ -2,7 +2,8 @@
 from __future__ import absolute_import
 import logging
 import threading
-import time
+from stat import S_ISREG, ST_MTIME, ST_MODE
+import os, sys, time
 import requests
 import backoff
 
@@ -19,6 +20,9 @@ import octoprint.plugin
 _logger = logging.getLogger(__name__)
 
 PRINTQ_FOLDER = "_printq_"
+POLL_INTERVAL = 30  #30 seconds
+CLEANUP_DIR_INTERVAL = 60*60  # 1 hour
+CLEANUP_AGE = 60*60*24*14     # files older than 2 weeks will be cleaned up
 
 class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 			octoprint.plugin.StartupPlugin,
@@ -88,7 +92,7 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 	def on_after_startup(self):
 		self.ensure_storage()
 
-		main_thread = threading.Thread(target=self.poll_loop)
+		main_thread = threading.Thread(target=self.main_loop)
 		main_thread.daemon = True
 		main_thread.start()
 
@@ -100,15 +104,20 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 		data['temperatures'] = self._printer.get_current_temperatures()
 		return data
 
-	def ensure_storage(self):
-		self._file_manager.add_folder("local", PRINTQ_FOLDER, ignore_existing=True)
-		self._g_code_folder = self._file_manager.path_on_disk("local", PRINTQ_FOLDER)
-
 	@backoff.on_exception(backoff.expo, Exception, max_value=240)
-	def poll_loop(self):
+	def main_loop(self):
+		last_poll = 0
+		last_cleanup_dir = 0
 		while True:
-			self.send_printer_status({"octoprint_data": self.octoprint_data()})
-			time.sleep(30)
+			if last_poll < time.time() - POLL_INTERVAL:
+				last_poll = time.time()
+				self.send_printer_status({"octoprint_data": self.octoprint_data()})
+
+			if last_cleanup_dir < time.time() - CLEANUP_DIR_INTERVAL:
+				last_cleanup_dir = time.time()
+				self.cleanup_data_dir()
+
+			time.sleep(1)
 
 	def send_printer_status(self, json_data):
 		combined_token = self._settings.get(["auth_token"])
@@ -145,6 +154,25 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 		target_path = os.path.join(self._g_code_folder, file_name)
 		open(target_path, "wb").write(r.content)
 		self._printer.select_file(target_path, False, printAfterSelect=True)
+
+	def ensure_storage(self):
+		self._file_manager.add_folder("local", PRINTQ_FOLDER, ignore_existing=True)
+		self._g_code_folder = self._file_manager.path_on_disk("local", PRINTQ_FOLDER)
+
+	def cleanup_data_dir(self):
+
+		# List all files with modification times: https://stackoverflow.com/questions/168409/how-do-you-get-a-directory-listing-sorted-by-creation-date-in-python
+		# get all entries in the directory w/ stats
+		entries = [os.path.join(self._g_code_folder, fn) for fn in os.listdir(self._g_code_folder) if not fn.endswith('.json')]
+		entries = [(os.stat(path), path) for path in entries]
+
+		# leave only regular files, insert creation date
+		entries = [(stat[ST_MTIME], path) for stat, path in entries if S_ISREG(stat[ST_MODE])]
+
+		for entry in entries:
+			mtime, path = entry
+			if mtime < time.time() - CLEANUP_AGE:
+				os.remove(path)
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
