@@ -7,6 +7,8 @@ import os, sys, time
 import requests
 import backoff
 
+from .utils import ip_addr
+
 ### (Don't forget to remove me)
 # This is a basic skeleton for your plugin's __init__.py. You probably want to adjust the class name of your plugin
 # as well as the plugin mixins it's subclassing from. This is really just a basic skeleton to get you started,
@@ -89,6 +91,10 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 				})
 
 	##~~Startup Plugin
+	def on_startup(self, host, port):
+		self._octoprint_port = port if port else self._settings.getInt(["server", "port"])
+		self._octoprint_ip = ip_addr()
+
 	def on_after_startup(self):
 		self.ensure_storage()
 
@@ -102,6 +108,8 @@ class PrintQueuePlugin(octoprint.plugin.SettingsPlugin,
 	def octoprint_data(self):
 		data = self._printer.get_current_data()
 		data['temperatures'] = self._printer.get_current_temperatures()
+		data['octoprint_port'] = self._octoprint_port
+		data['octoprint_ip'] = self._octoprint_ip
 		return data
 
 	@backoff.on_exception(backoff.expo, Exception, max_value=240)
